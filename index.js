@@ -153,7 +153,7 @@ app.post("/c", async (req, res) => {
     const alert = generate_blind_xss_alert(data);
     data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
 
-    iif (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
+    if (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
         request.post(discord_incoming_webhook, { form: { username: "bxss", content: location } }, function (error, response, body) {
             //console.log(body);
             console.log("[!] XSS blind payload triggered! Data sent to discord.");
