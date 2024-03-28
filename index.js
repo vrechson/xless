@@ -48,10 +48,10 @@ function generate_blind_xss_alert(body) {
 }
 
 function generate_callback_alert(headers, data, url) {
-    var alert = "� **Out-of-Band Callback Received!**\n\n";
-    alert += `**IP Address          |** \`${data["Remote IP"]}\`\n`;
+    var alert = ":rotating_light: **Out-of-Band Callback Received!**\n\n";
+    alert += `**IP Address           |** \`${data["Remote IP"]}\`\n`;
     alert += `**Request URI         |** \`${url}\`\n`;
-    alert += `**Other Headers**\n\`\`\``
+    alert += `**Raw Headers**\n\`\`\``
     // Add all the headers
     for (var key in headers) {
         if (headers.hasOwnProperty(key)) {
