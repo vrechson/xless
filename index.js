@@ -112,7 +112,7 @@ app.all("/message", (req, res) => {
     var message = req.query.text || req.body.text;
     const alert = generate_message_alert(message);
     data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
-    request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "XLess", content: alert } }, function (error, response, body) {
+    request.post(discord_incoming_webhook, { form: { username: "XLess", content: alert } }, function (error, response, body) {
         console.log(body);
     });
 
@@ -153,8 +153,8 @@ app.post("/c", async (req, res) => {
     const alert = generate_blind_xss_alert(data);
     data = { form: { payload: JSON.stringify({ username: "XLess", mrkdwn: true, text: alert }) } };
 
-    iif (process.env.DISCORD_INCOMING_WEBHOOK !== undefined && process.env.DISCORD_INCOMING_WEBHOOK != "") {
-        request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: location } }, function (error, response, body) {
+    iif (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
+        request.post(discord_incoming_webhook, { form: { username: "bxss", content: location } }, function (error, response, body) {
             //console.log(body);
             console.log("[!] XSS blind payload triggered! Data sent to discord.");
         });
@@ -213,8 +213,8 @@ app.all("/*", (req, res) => {
     const alert = generate_callback_alert(headers, data, req.url);
     data = { form: { payload: JSON.stringify({ username: "BXSS", mrkdwn: true, text: alert }) } };
 
-    if (process.env.DISCORD_INCOMING_WEBHOOK !== undefined && process.env.DISCORD_INCOMING_WEBHOOK != "") {
-        request.post(process.env.DISCORD_INCOMING_WEBHOOK, { form: { username: "bxss", content: alert } }, function (error, response, body) {
+    if (discord_incoming_webhook !== undefined && discord_incoming_webhook != "") {
+        request.post(discord_incoming_webhook, { form: { username: "bxss", content: alert } }, function (error, response, body) {
             //console.log(body);
             console.log("[!] request sent to discord.");
         });
