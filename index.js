@@ -13,9 +13,9 @@ const path = require("path");
 require("dotenv").config();
 
 const port = process.env.PORT || 3000;
-const imgbb_api_key = process.env.IMGBB_API_KEY;
-const slack_incoming_webhook = process.env.SLACK_INCOMING_WEBHOOK;
-const discord_incoming_webhook = process.env.DISCORD_INCOMING_WEBHOOK;
+const imgbb_api_key = process.env.IMGBB_API_KEY || undefined;
+const slack_incoming_webhook = process.env.SLACK_INCOMING_WEBHOOK || undefined;
+const discord_incoming_webhook = process.env.DISCORD_INCOMING_WEBHOOK || undefined;
 
 const app = express();
 app.use(cors());
