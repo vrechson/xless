@@ -70,11 +70,11 @@ function generate_blind_xss_alert(body) {
 }
 
 function generate_callback_alert(headers, data, url) {
-    var alert = ":rotating_light: **Out-of-Band Callback Received!**\n\n";
+    var alert = "\n:rotating_light: **Out-of-Band Callback Received!**\n\n";
     alert += `**IP Address      |** \`${data["Remote IP"]}\`\n`;
     alert += `**Request URI     |** \`${url}\`\n`;
     alert += `**Raw Headers**\n\`\`\``
-    // Add all the headers
+  
     for (var key in headers) {
         if (headers.hasOwnProperty(key)) {
             alert += `${key}: ${headers[key]}\n`;
@@ -148,8 +148,8 @@ app.all("/message", (req, res) => {
 app.post("/c", async (req, res) => {
     let data = req.body;
 
-    var location = ":rocket: **Blind XSS Triggered**\n";
-    location += `**Location     |** \`${data["Location"]}\`\n`;
+    var location = "\n:rocket: **Blind XSS Triggered**\n\n";
+    location += `**Location        |** \`${data["Location"]}\`\n`;
 
     // Upload our screenshot and only then send the Slack alert
     data["Screenshot URL"] = "";
@@ -186,37 +186,11 @@ app.post("/c", async (req, res) => {
 });
 
 /**
- * Route to check the health of our xless listener
+ * Route to ignore favicon :)
  */
-app.get("/health", async (req, res) => {
-    let health_data = {};
+app.get("/favicon.ico", async (req, res) => {
 
-    // Check if the environemtn variables are set
-    health_data.IMGBB_API_KEY = imgbb_api_key !== undefined;
-    health_data.SLACK_INCOMING_WEBHOOK = slack_incoming_webhook !== undefined;
-    health_data.DISCORD_INCOMING_WEBHOOK = discord_incoming_webhook !== undefined;
-
-    if (!health_data.IMGBB_API_KEY || !health_data.SLACK_INCOMING_WEBHOOK) {
-        res.json(health_data);
-        res.end();
-    }
-
-    const xless_logo = "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";
-
-    try {
-        const imgRes = await uploadImage(xless_logo);
-        const imgOut = JSON.parse(imgRes);
-        if (imgOut.error) {
-            health_data.imgbb_response = imgOut.error;
-        } else if (imgOut && imgOut.data && imgOut.data.url_viewer) {
-            // Add the URL to our health_data
-            health_data.imgbb_response = imgOut.data.url_viewer;
-        }
-    } catch (e) {
-        health_data.imgbb_response = e.message;
-    }
-
-    res.json(health_data);
+    res.send("ok");
     res.end();
 });
 
